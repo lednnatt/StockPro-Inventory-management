@@ -3,27 +3,23 @@ package com.example.gestioninventariostockpro
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.gestioninventariostockpro.ui.theme.GestionInventariostockproTheme
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
-            GestionInventariostockproTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+            MaterialTheme {
+                Surface {
+                    StockProApp()
                 }
             }
         }
@@ -31,17 +27,42 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+fun StockProApp() {
+    val navController = rememberNavController()
+    val stockViewModel: StockViewModel = viewModel()
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    GestionInventariostockproTheme {
-        Greeting("Android")
+    NavHost(navController = navController, startDestination = "ingreso") {
+
+        composable("ingreso") {
+            PantallaIngreso(navController = navController)
+        }
+
+        composable(
+            route = "catalogo/{nombreOperario}",
+            arguments = listOf(navArgument("nombreOperario") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val nombre = backStackEntry.arguments?.getString("nombreOperario") ?: ""
+            PantallaCatalogo(
+                navController = navController,
+                viewModel = stockViewModel,
+                nombreOperario = nombre
+            )
+        }
+
+        composable(
+            route = "edicion/{productoId}",
+            arguments = listOf(navArgument("productoId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getInt("productoId") ?: 0
+            PantallaEdicion(
+                navController = navController,
+                viewModel = stockViewModel,
+                productoId = id
+            )
+        }
+
+        composable("reporte") {
+            PantallaReporte(navController = navController, viewModel = stockViewModel)
+        }
     }
 }
